@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ranjiahao.github.io/"/>
-  <updated>2020-04-30T16:00:00.000Z</updated>
+  <updated>2020-05-01T16:00:00.000Z</updated>
   <id>https://ranjiahao.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>进程程序替换</title>
+    <link href="https://ranjiahao.github.io/2020/05/02/%E8%BF%9B%E7%A8%8B%E7%BB%88%E6%AD%A2%E4%B8%8Ewait%E5%8F%82%E6%95%B0status/"/>
+    <id>https://ranjiahao.github.io/2020/05/02/%E8%BF%9B%E7%A8%8B%E7%BB%88%E6%AD%A2%E4%B8%8Ewait%E5%8F%82%E6%95%B0status/</id>
+    <published>2020-05-01T16:00:00.000Z</published>
+    <updated>2020-05-01T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="常见进程退出方法"><a class="markdownIt-Anchor" href="#常见进程退出方法"></a> 常见进程退出方法</h1><ol><li>exit或_exit退出<br>_exit系统调用函数：<code>void _exit(int status);</code><br>参数status定义了进程的终止状态，父进程通过wait获取该值。<br>虽然status是int，但是仅有低8位可以被父进程所用，实际上就是子进程的返回值。<br>exit库函数：<code>void exit(int status);</code><br>和_exit唯一的区别是退出前执行用户通过atexit或on_exit定义的清理函数然后刷新缓存关闭所有打开的流，最后调用_exit函数退出</li><li>return退出，和exit一样，exec/exit针对进程间通信，就像call/return针对函数间通信</li><li>信号终止</li></ol><h1 id="常见进程等待方法"><a class="markdownIt-Anchor" href="#常见进程等待方法"></a> 常见进程等待方法</h1><ol><li>wait系统调用函数（阻塞）<code>pid_t wait(int* status);</code><br>status为输出型参数，NULL表示不关心子进程状态<br>返回值：成功返回被等待进程的pid，失败返回-1</li><li>waitpid系统调用函数<br><code>pid_ t waitpid(pid_t pid, int* status, int options);</code><br>参数pid若为-1则等待任意一个进程，若&gt;0则等待特定的进程<br>参数options若为0则阻塞，若为WNOHANG则非阻塞</li></ol><h1 id="wait参数statu"><a class="markdownIt-Anchor" href="#wait参数statu"></a> wait参数statu</h1><p>status不仅仅是一个int类型参数，可以看作是一个位图<br>只研究其低16位：<br><img src="img1.png" alt="img1"><br>我们可以通过status &amp; 0x7f来判断异常信号是否为0；<br>若为0，则正常退出，然后可以通过(status &gt;&gt; 8) &amp; 0xff来获取子进程返回值。<br>sys/wait.h中提供了一些宏来简化这些操作：</p><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (WIFEXITED(status)) &#123;</span><br><span class="line">    <span class="comment">// 正常退出：((status) &amp; 0x7f) == 0</span></span><br><span class="line">    <span class="comment">// 打印退出码：(status &gt;&gt; 8) &amp; 0xff</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child return: %d\n"</span>, WEXITSTATUS(status));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (WIFSIGNALED(status)) &#123;</span><br><span class="line">    <span class="comment">// 异常退出：((signed char) (((status) &amp; 0x7f) + 1) &gt;&gt; 1) &gt; 0</span></span><br><span class="line">    <span class="comment">// 打印异常信号值：(status) &amp; 0x7f</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child signal: %d\n"</span>, WTERMSIG(status));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;常见进程退出方法&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#常见进程退出方法&quot;&gt;&lt;/a&gt; 常见进程退出方法&lt;/h1&gt;&lt;ol&gt;&lt;li&gt;exit或_exit退出&lt;br&gt;_exit系统调用函数：&lt;code&gt;void _exit(int s
+      
+    
+    </summary>
+    
+    
+      <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
+    
+    
+      <category term="进程" scheme="https://Ranjiahao.github.io/tags/%E8%BF%9B%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>fork、vfork、clone、system、popen</title>
@@ -116,6 +142,8 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
+    
   </entry>
   
   <entry>
@@ -140,7 +168,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="基排序" scheme="https://Ranjiahao.github.io/tags/%E5%9F%BA%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -166,7 +194,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="桶排序" scheme="https://Ranjiahao.github.io/tags/%E6%A1%B6%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -192,7 +220,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="计数排序" scheme="https://Ranjiahao.github.io/tags/%E8%AE%A1%E6%95%B0%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -218,7 +246,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="归并排序" scheme="https://Ranjiahao.github.io/tags/%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -244,9 +272,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="冒泡排序" scheme="https://Ranjiahao.github.io/tags/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F/"/>
-    
-      <category term="快速排序" scheme="https://Ranjiahao.github.io/tags/%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -272,9 +298,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="直接选择排序" scheme="https://Ranjiahao.github.io/tags/%E7%9B%B4%E6%8E%A5%E9%80%89%E6%8B%A9%E6%8E%92%E5%BA%8F/"/>
-    
-      <category term="堆排序" scheme="https://Ranjiahao.github.io/tags/%E5%A0%86%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -300,9 +324,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="直接插入排序" scheme="https://Ranjiahao.github.io/tags/%E7%9B%B4%E6%8E%A5%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8F/"/>
-    
-      <category term="希尔排序" scheme="https://Ranjiahao.github.io/tags/%E5%B8%8C%E5%B0%94%E6%8E%92%E5%BA%8F/"/>
+      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   
@@ -360,7 +382,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="list" scheme="https://Ranjiahao.github.io/tags/list/"/>
+      <category term="stl" scheme="https://Ranjiahao.github.io/tags/stl/"/>
     
   </entry>
   
@@ -386,7 +408,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="vector" scheme="https://Ranjiahao.github.io/tags/vector/"/>
+      <category term="stl" scheme="https://Ranjiahao.github.io/tags/stl/"/>
     
   </entry>
   
@@ -412,7 +434,7 @@
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
     
-      <category term="string" scheme="https://Ranjiahao.github.io/tags/string/"/>
+      <category term="stl" scheme="https://Ranjiahao.github.io/tags/stl/"/>
     
   </entry>
   
@@ -525,32 +547,6 @@
     
       <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
     
-    
-  </entry>
-  
-  <entry>
-    <title>实现date类</title>
-    <link href="https://ranjiahao.github.io/2020/03/01/%E5%AE%9E%E7%8E%B0date%E7%B1%BB/"/>
-    <id>https://ranjiahao.github.io/2020/03/01/%E5%AE%9E%E7%8E%B0date%E7%B1%BB/</id>
-    <published>2020-02-29T16:00:00.000Z</published>
-    <updated>2020-02-29T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// date.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="built_in">std</span>::<span class="built_in">cin</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="built_in">std</span>::<span class="built_in">cout</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="built_in">std</span>::istream;</span><br><span class="line"><span class="keyword">using</span> <span class="built_in">std</span>::ostream;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Date</span> &#123;</span></span><br><span class="line">    <span class="keyword">friend</span> ostream&amp; <span class="keyword">operator</span>&lt;&lt;(ostream&amp; _cout, <span class="keyword">const</span> Date&amp; d);</span><br><span class="line">    <span class="keyword">friend</span> istream&amp; <span class="keyword">operator</span>&gt;&gt;(istream&amp; _cin, Date&amp; d);</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">GetMonthDay</span><span class="params">(<span class="keyword">int</span> year, <span class="keyword">int</span> month)</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">        <span class="keyword">static</span> <span class="keyword">int</span> monthArray[<span class="number">13</span>] = &#123; <span class="number">0</span>, <span class="number">31</span>, <span class="number">28</span>, <span class="number">31</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">31</span>, <span class="number">30</span>, <span class="number">31</span>, <span class="number">30</span>, <span class="number">31</span> &#125;;</span><br><span class="line">        <span class="keyword">if</span> ((month == <span class="number">2</span>)</span><br><span class="line">            &amp;&amp; ((year % <span class="number">4</span> == <span class="number">0</span> &amp;&amp; year % <span class="number">100</span> != <span class="number">0</span>)</span><br><span class="line">                || (year % <span class="number">400</span> == <span class="number">0</span>))) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">29</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> monthArray[month];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Date(<span class="keyword">int</span> year = <span class="number">1900</span>, <span class="keyword">int</span> month = <span class="number">1</span>, <span class="keyword">int</span> day = <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">int</span> <span class="keyword">operator</span>-(<span class="keyword">const</span> Date&amp;d) <span class="keyword">const</span>;</span><br><span class="line">    Date&amp; <span class="keyword">operator</span>++();<span class="comment">// 前置++</span></span><br><span class="line">    Date <span class="keyword">operator</span>++(<span class="keyword">int</span>);<span class="comment">// 后置++</span></span><br><span class="line">    Date&amp; <span class="keyword">operator</span>--();<span class="comment">// 前置--</span></span><br><span class="line">    Date <span class="keyword">operator</span>--(<span class="keyword">int</span>);<span class="comment">// 后置--</span></span><br><span class="line">    Date <span class="keyword">operator</span>+(<span class="keyword">int</span> day) <span class="keyword">const</span>;</span><br><span class="line">    Date <span class="keyword">operator</span>-(<span class="keyword">int</span> day) <span class="keyword">const</span>;</span><br><span class="line">    Date&amp; <span class="keyword">operator</span>+=(<span class="keyword">int</span> day);</span><br><span class="line">    Date&amp; <span class="keyword">operator</span>-=(<span class="keyword">int</span> day);</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>&gt;(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>&gt;=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>&lt;(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>&lt;=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>==(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line">    <span class="keyword">bool</span> <span class="keyword">operator</span>!=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> _year;</span><br><span class="line">    <span class="keyword">int</span> _month;</span><br><span class="line">    <span class="keyword">int</span> _day;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// date.cpp</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"Date.h"</span></span></span><br><span class="line"></span><br><span class="line">Date::Date(<span class="keyword">int</span> year, <span class="keyword">int</span> month, <span class="keyword">int</span> day) &#123;</span><br><span class="line">    <span class="keyword">if</span> (year &gt;= <span class="number">1900</span></span><br><span class="line">        &amp;&amp; month &gt; <span class="number">0</span> &amp;&amp; month &lt; <span class="number">13</span></span><br><span class="line">        &amp;&amp; day &gt; <span class="number">0</span> &amp;&amp; day &lt;= GetMonthDay(year, month)) &#123;</span><br><span class="line">        _year = year;</span><br><span class="line">        _month = month;</span><br><span class="line">        _day = day;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"Input illegal,reset to default value"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        _year = <span class="number">1900</span>;</span><br><span class="line">        _month = <span class="number">1</span>;</span><br><span class="line">        _day = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ostream&amp; <span class="keyword">operator</span>&lt;&lt;(ostream&amp; _cout, <span class="keyword">const</span> Date&amp; d) &#123;</span><br><span class="line">    _cout &lt;&lt; d._year &lt;&lt; <span class="string">"-"</span> &lt;&lt; d._month &lt;&lt; <span class="string">"-"</span> &lt;&lt; d._day &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> _cout;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">istream&amp; <span class="keyword">operator</span>&gt;&gt;(istream&amp; _cin, Date&amp; d) &#123;</span><br><span class="line">    <span class="keyword">int</span> year;</span><br><span class="line">    <span class="keyword">int</span> month;</span><br><span class="line">    <span class="keyword">int</span> day;</span><br><span class="line">    _cin &gt;&gt; year;</span><br><span class="line">    _cin &gt;&gt; month;</span><br><span class="line">    _cin &gt;&gt; day;</span><br><span class="line">    <span class="comment">// new(&amp;d)Date(year, month, day);</span></span><br><span class="line">    d = Date(year, month, day);</span><br><span class="line">    <span class="keyword">return</span> _cin;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Date::<span class="keyword">operator</span>-(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="function">Date <span class="title">maxdate</span><span class="params">(*<span class="keyword">this</span>)</span></span>;</span><br><span class="line">    <span class="function">Date <span class="title">mindate</span><span class="params">(d)</span></span>;</span><br><span class="line">    <span class="keyword">int</span> flag = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (*<span class="keyword">this</span> &lt; d) &#123;</span><br><span class="line">        maxdate = d;</span><br><span class="line">        mindate = *<span class="keyword">this</span>;</span><br><span class="line">        flag = <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> days = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (mindate != maxdate) &#123;</span><br><span class="line">        ++mindate;</span><br><span class="line">        ++days;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> days * flag;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ++d 前置++</span></span><br><span class="line">Date&amp; Date::<span class="keyword">operator</span>++() &#123;</span><br><span class="line">    *<span class="keyword">this</span> += <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// d++ 后置++</span></span><br><span class="line">Date Date::<span class="keyword">operator</span>++(<span class="keyword">int</span>) &#123;</span><br><span class="line">    <span class="function">Date <span class="title">ret</span><span class="params">(*<span class="keyword">this</span>)</span></span>;</span><br><span class="line">    *<span class="keyword">this</span> += <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --d 前置--</span></span><br><span class="line">Date&amp; Date::<span class="keyword">operator</span>--() &#123;</span><br><span class="line">    *<span class="keyword">this</span> -= <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// d-- 后置--</span></span><br><span class="line">Date Date::<span class="keyword">operator</span>--(<span class="keyword">int</span>) &#123;</span><br><span class="line">    <span class="function">Date <span class="title">tmp</span><span class="params">(*<span class="keyword">this</span>)</span></span>;</span><br><span class="line">    *<span class="keyword">this</span> -= <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> tmp;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Date Date::<span class="keyword">operator</span>+(<span class="keyword">int</span> day) <span class="keyword">const</span> &#123;</span><br><span class="line">    Date ret = *<span class="keyword">this</span>;</span><br><span class="line">    ret += day;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Date Date::<span class="keyword">operator</span>-(<span class="keyword">int</span> day) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="function">Date <span class="title">ret</span><span class="params">(*<span class="keyword">this</span>)</span></span>;</span><br><span class="line">    ret -= day;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Date&amp; Date::<span class="keyword">operator</span>+=(<span class="keyword">int</span> day) &#123;</span><br><span class="line">    <span class="keyword">if</span> (day &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span> -= -day;</span><br><span class="line">    &#125;</span><br><span class="line">    _day += day;</span><br><span class="line">    <span class="keyword">while</span> (_day &gt; GetMonthDay(_year, _month)) &#123;</span><br><span class="line">        _day -= GetMonthDay(_year, _month);</span><br><span class="line">        _month++;</span><br><span class="line">        <span class="keyword">if</span> (_month == <span class="number">13</span>) &#123;</span><br><span class="line">            ++_year;</span><br><span class="line">            _month = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Date&amp; Date::<span class="keyword">operator</span>-=(<span class="keyword">int</span> day) &#123;</span><br><span class="line">    <span class="keyword">if</span> (day &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span> += -day;</span><br><span class="line">    &#125;</span><br><span class="line">    _day -= day;</span><br><span class="line">    <span class="keyword">while</span> (_day &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        --_month;</span><br><span class="line">        <span class="keyword">if</span> (_month == <span class="number">0</span>) &#123;</span><br><span class="line">            _month = <span class="number">12</span>;</span><br><span class="line">            --_year;</span><br><span class="line">        &#125;</span><br><span class="line">        _day += GetMonthDay(_year, _month);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>&gt;(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (_year &gt; d._year) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (_year == d._year) &#123;</span><br><span class="line">        <span class="keyword">if</span> (_month &gt; d._month) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (_month == d._month) &#123;</span><br><span class="line">            <span class="keyword">if</span> (_day &gt; d._day) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>&gt;=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span> &gt; d || *<span class="keyword">this</span> == d;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>&lt;(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> !(*<span class="keyword">this</span> &gt;= d);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>&lt;=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> !(*<span class="keyword">this</span> &gt; d);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>==(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> _year == d._year &amp;&amp; _month == d._month &amp;&amp; _day == d._day;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> Date::<span class="keyword">operator</span>!=(<span class="keyword">const</span> Date&amp; d) <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> !(*<span class="keyword">this</span> == d);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Date date;</span><br><span class="line">    <span class="built_in">cin</span> &gt;&gt; date;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; date &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;figure class=&quot;highlight cpp&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;
-      
-    
-    </summary>
-    
-    
-      <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
-    
-    
-      <category term="date类" scheme="https://Ranjiahao.github.io/tags/date%E7%B1%BB/"/>
     
   </entry>
   

@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ranjiahao.github.io/"/>
-  <updated>2020-05-01T16:00:00.000Z</updated>
+  <updated>2020-05-02T16:00:00.000Z</updated>
   <id>https://ranjiahao.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>进程程序替换</title>
+    <link href="https://ranjiahao.github.io/2020/05/03/%E8%BF%9B%E7%A8%8B%E7%A8%8B%E5%BA%8F%E6%9B%BF%E6%8D%A2/"/>
+    <id>https://ranjiahao.github.io/2020/05/03/%E8%BF%9B%E7%A8%8B%E7%A8%8B%E5%BA%8F%E6%9B%BF%E6%8D%A2/</id>
+    <published>2020-05-02T16:00:00.000Z</published>
+    <updated>2020-05-02T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>当进程调用exec函数执行磁盘里另一个程序时，并不创建新进程，调用前后进程id并未改变，新进程的数据和代码会替换掉物理内存中的数据段和代码段，从而虚拟根据页表找到的数据和代码都会别替换成新的，所以当进程开始执行时，就要从要执行的程序开始执行<br>系统调用：<br><code>int execve(const char* path, char* const argv[], char* const envp[]);</code><br>库函数：<br><code>int execl(const char* path, const char* arg, ...);</code><br><code>int execlp(const char* file, const char* arg, ...);</code><br><code>int execle(const char* path, const char* arg, ...,char* const envp[]);</code><br><code>int execv(const char* path, char* const argv[]);</code><br><code>int execvp(const char* file, char* const argv[]);</code><br><code>int execvpe(const char* file, char* const argv[], char* const envp[]);</code><br>规律：exec必选<br><strong>v和l必须选其一</strong></p><ul><li>l(list) : 表示参数采用列表</li><li>v(vector) : 参数用数组</li></ul><p><strong>e、p可选可不选</strong></p><ul><li>p(path) : 有p自动搜索环境变量PATH</li><li>e(env) : 表示自己维护环境变量</li></ul><p>如果调用成功则加载新的程序从启动代码开始执行，不返回<br>如果调用出错则返回-1</p><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>* <span class="keyword">const</span> argv[] = &#123;<span class="string">"ls"</span>, <span class="string">"-l"</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line"><span class="keyword">char</span> *<span class="keyword">const</span> envp[] = &#123;<span class="string">"PATH=/bin:/usr/bin"</span>, <span class="string">"TERM=console"</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line"><span class="comment">// l和v</span></span><br><span class="line">execl(<span class="string">"/bin/ls"</span>, <span class="string">"ls"</span>, <span class="string">"-l"</span>, <span class="literal">NULL</span>);</span><br><span class="line">execv(<span class="string">"/bin/ls"</span>, argv);</span><br><span class="line"><span class="comment">// p和e</span></span><br><span class="line">execlp(<span class="string">"ls"</span>, <span class="string">"ls"</span>, <span class="string">"-l"</span>, <span class="literal">NULL</span>);</span><br><span class="line">execve(<span class="string">"/bin/ls"</span>, argv, envp);</span><br></pre></td></tr></table></figure><p>这些库函数在调用时候，如果参数采用列表格式首先将参数替换成数组形式，然后如果有相对路径就在底层替换成绝对路径，然后根据自己维护的环境变量或者shell的环境变量组织envp，而后调execve接口<br>我们发现函数和进程之间有些许相似性：<br>c语言中，一个函数和一个函数可以通过return/call来通信，这类似与进程间的exit/exec&amp;fork，进程可以fork/exec，并传给它一些参数。这个被调用的程序执行一定的操作，然后通过exit(n)来返回值。调用它的进程可以通过wait来获取exit的返回值</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;当进程调用exec函数执行磁盘里另一个程序时，并不创建新进程，调用前后进程id并未改变，新进程的数据和代码会替换掉物理内存中的数据段和代码段，从而虚拟根据页表找到的数据和代码都会别替换成新的，所以当进程开始执行时，就要从要执行的程序开始执行&lt;br&gt;系统调用：&lt;br&gt;&lt;cod
+      
+    
+    </summary>
+    
+    
+      <category term="Linux" scheme="https://Ranjiahao.github.io/categories/Linux/"/>
+    
+    
+      <category term="进程" scheme="https://Ranjiahao.github.io/tags/%E8%BF%9B%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>进程程序替换</title>
@@ -523,30 +549,6 @@
       <category term="decltype" scheme="https://Ranjiahao.github.io/tags/decltype/"/>
     
       <category term="范围for" scheme="https://Ranjiahao.github.io/tags/%E8%8C%83%E5%9B%B4for/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>设计一个类，只能在栈/堆上创建对象</title>
-    <link href="https://ranjiahao.github.io/2020/03/03/%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E5%8F%AA%E8%83%BD%E5%9C%A8%E6%A0%88%E6%88%96%E5%A0%86%E4%B8%8A%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%B1%BB/"/>
-    <id>https://ranjiahao.github.io/2020/03/03/%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E5%8F%AA%E8%83%BD%E5%9C%A8%E6%A0%88%E6%88%96%E5%A0%86%E4%B8%8A%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%B1%BB/</id>
-    <published>2020-03-02T16:00:00.000Z</published>
-    <updated>2020-03-02T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="设计一个类只能在栈堆上创建对象"><a class="markdownIt-Anchor" href="#设计一个类只能在栈堆上创建对象"></a> 设计一个类，只能在栈/堆上创建对象</h1><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HeapOnly</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">static</span> HeapOnly* <span class="title">CreateObject</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> HeapOnly;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">// 将构造函数私有化</span></span><br><span class="line">    HeapOnly() &#123;&#125;</span><br><span class="line">    <span class="comment">// 防拷贝</span></span><br><span class="line">    HeapOnly(<span class="keyword">const</span> HeapOnly&amp;);</span><br><span class="line">    <span class="comment">// 防拷贝C++11写法</span></span><br><span class="line">    <span class="comment">// HeapOnly(const HeapOnly&amp;) = delete;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span>  <span class="title">HeapOnly</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    HeapOnly() &#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span>  <span class="title">Destory</span><span class="params">()</span> </span>&#123; <span class="keyword">delete</span> <span class="keyword">this</span>; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">// 如果类的析构函数是私有的，则编译器不会在栈空间上为类对象分配内存</span></span><br><span class="line">    ~HeapOnly() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StackOnly</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">static</span> StackOnly <span class="title">CreateObject</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> StackOnly();</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    StackOnly() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StackOnly</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    StackOnly() &#123;&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span>* <span class="keyword">operator</span> <span class="title">new</span><span class="params">(<span class="keyword">size_t</span> size)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="keyword">operator</span> <span class="title">delete</span><span class="params">(<span class="keyword">void</span>* p)</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;设计一个类只能在栈堆上创建对象&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#设计一个类只能在栈堆上创建对象&quot;&gt;&lt;/a&gt; 设计一个类，只能在栈/堆上创建对象&lt;/h1&gt;&lt;figure class=&quot;highlight cpp&quot;&gt;&lt;tabl
-      
-    
-    </summary>
-    
-    
-      <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
-    
     
   </entry>
   

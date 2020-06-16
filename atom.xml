@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ranjiahao.github.io/"/>
-  <updated>2020-06-12T16:00:00.000Z</updated>
+  <updated>2020-06-15T16:00:00.000Z</updated>
   <id>https://ranjiahao.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>线程基础</title>
+    <link href="https://ranjiahao.github.io/2020/06/16/%E7%BA%BF%E7%A8%8B%E5%9F%BA%E7%A1%80/"/>
+    <id>https://ranjiahao.github.io/2020/06/16/%E7%BA%BF%E7%A8%8B%E5%9F%BA%E7%A1%80/</id>
+    <published>2020-06-15T16:00:00.000Z</published>
+    <updated>2020-06-15T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="进程与线程"><a class="markdownIt-Anchor" href="#进程与线程"></a> 进程与线程</h1><p>进程是一个线程组，线程是进程中的一条执行流（如，一个进程中的main函数，是由线程执行起来的），这个执行流在linux下是通过pcb实现的，所以linux下线程就是一个pcb，一个进程中的线程公用同一个虚拟地址空间，相较与传统pcb更加轻量化，也被称为轻量级进程。操作系统资源分配是直接分配给整个线程组，这个线程组就是进程，所以进程是资源分配的基本单位，而线程是进程实际运作的基本单位，cpu通过调度pcb来实现程序的调度，所以线程是调度的基本单位，ps -L中LWP为轻量级进程id，pid为这个线程组id<br>一个进程中的线程共享：</p><ol><li>同一虚拟地址空间：本质共享同一页表</li><li>文件描述符表：一个线程修改了一个文件，其他的线程访问到的文件也都改变</li><li>每种信号的处理方式(SIG_IGN、SIG_DFL或者自定义的信号处理函数)</li><li>未决信号集：只要进程收到了信号，也就意味着所有线程收到了信号</li><li>当前工作目录、用户id和组id</li></ol><p>由于进程中的各个线程共用同一个虚拟地址空间，为了保证程序的合理性所以各个线程有自己的信息：</p><ol><li>线程ID</li><li>栈：防止调用栈混乱</li><li>一组寄存器：线程的上下文信息</li><li>errno：防止线程的errno被另一个线程覆盖</li><li>信号屏蔽字：防止线程在执行重要操作时被打断</li><li>调度优先级：各线程要被调度，就必须有优先级</li></ol><h1 id="线程的优缺点"><a class="markdownIt-Anchor" href="#线程的优缺点"></a> 线程的优/缺点</h1><p>优点：</p><ul><li>线程的创建与销毁成本更低，创建一个进程，我们需要给他分配虚拟地址空间，这个空间占用了一部分资源。创建一个线程，不需要分配虚拟地址空间，节约资源，增快了效率，销毁也比较快</li><li>与进程之间的切换相比，线程之间的切换需要操作系统做的工作要少很多，不需要切换页表，只用切换一小部分数据，效率较高</li><li>由于线程组中线程公用同一虚拟地址空间，所以相比进程线程间通信比较方便，只需知道地址就能访问同一空间</li><li>能充分利用多处理器的可并行数量，比如4核CPU，需要不停歇的进行CPU的运算操作，用四个线程运算操作，CPU占用率可达到400%（Linux下）充分利用了硬件资源，处理CPU密集型程序通常执行流个数为CPU核心数+1，若创建线程很多而CPU资源不够多，则大量进程切换调度成本会提高</li><li>I/O密集型应用，为了提高性能，将I/O操作重叠，多任务并行处理，多磁盘可以实现同时处理，线程可以同时等待不同的I/O操作</li></ul><p>缺点：</p><ul><li>缺乏保护访问控制、健壮性降低，需要考虑线程安全问题，异常以及系统调用exit会直接针对整个进程</li><li>性能损失，若CPU密集型程序线程的数量比可用的处理器多则增加了额外的同步和调度开销</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;进程与线程&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#进程与线程&quot;&gt;&lt;/a&gt; 进程与线程&lt;/h1&gt;&lt;p&gt;进程是一个线程组，线程是进程中的一条执行流（如，一个进程中的main函数，是由线程执行起来的），这个执行流在linux下是通过p
+      
+    
+    </summary>
+    
+    
+      <category term="Linux" scheme="https://Ranjiahao.github.io/categories/Linux/"/>
+    
+    
+      <category term="线程" scheme="https://Ranjiahao.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>智能指针模拟实现</title>
@@ -504,32 +530,6 @@
       
       
         &lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;text-align:center&quot;&gt;名称&lt;/th&gt;&lt;th style=&quot;text-align:center&quot;&gt;平均时间复杂度&lt;/th&gt;&lt;th style=&quot;text-align:center&quot;&gt;额外空间复杂度&lt;/th&gt;&lt;
-      
-    
-    </summary>
-    
-    
-      <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
-    
-    
-      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>基排序</title>
-    <link href="https://ranjiahao.github.io/2020/04/07/%E5%9F%BA%E6%8E%92%E5%BA%8F/"/>
-    <id>https://ranjiahao.github.io/2020/04/07/%E5%9F%BA%E6%8E%92%E5%BA%8F/</id>
-    <published>2020-04-06T16:00:00.000Z</published>
-    <updated>2020-04-06T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>基于桶排序来实现。通过键值的部分信息，将要排序的元素分配至某些“桶”中，以此达到排序的作用。基数排序的方式可以采用LSD或MSD，LSD的排序方式由键值的最右边开始，而MSD则相反，由键值的最左边开始<br>时间复杂度：O(p(n+b))<br>其中：分配为O(n)、收集为O(b)、p为收集分配趟数<br>空间复杂度：O(n+b)</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 假设元素最多有MaxDigit个关键字，基数全是同样的Radix</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MaxDigit 4</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> Radix 10</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 默认次位D=1, 主位D&lt;=MaxDigit</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">GetDigit</span><span class="params">(<span class="keyword">int</span> X, <span class="keyword">int</span> D)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> d;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= D; i++) &#123;</span><br><span class="line">        d = X % Radix;</span><br><span class="line">        X /= Radix;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> d;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 基数排序 - 次位优先</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">LSDRadixSort</span><span class="params">(<span class="keyword">int</span> <span class="built_in">array</span>[], <span class="keyword">int</span> size)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;&gt; arr(Radix);</span><br><span class="line">    <span class="comment">// 将原始序列存入链表list</span></span><br><span class="line">    <span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt; <span class="built_in">list</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">        <span class="built_in">list</span>.push_back(<span class="built_in">array</span>[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 开始排序</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> D = <span class="number">1</span>; D &lt;= MaxDigit; D++) &#123;</span><br><span class="line">        <span class="comment">// 分配</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; i : <span class="built_in">list</span>) &#123;</span><br><span class="line">            <span class="keyword">int</span> Di = GetDigit(i, D);</span><br><span class="line">            arr[Di].push_back(i);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 收集</span></span><br><span class="line">        <span class="built_in">list</span>.clear();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; l : arr) &#123;</span><br><span class="line">            <span class="built_in">list</span>.insert(<span class="built_in">list</span>.end(), l.begin(), l.end());</span><br><span class="line">            l.clear();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 将list倒入array[]</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">        <span class="built_in">array</span>[i] = *<span class="built_in">list</span>.begin();</span><br><span class="line">        <span class="built_in">list</span>.pop_front();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 核心递归函数：对array[L]...array[R]的第D位数进行排序</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">MSD</span><span class="params">(<span class="keyword">int</span> <span class="built_in">array</span>[], <span class="keyword">int</span> L, <span class="keyword">int</span> R, <span class="keyword">int</span> D)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (D == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt;&gt; arr(Radix);</span><br><span class="line">    <span class="comment">// 将原始序列存入链表list</span></span><br><span class="line">    <span class="built_in">list</span>&lt;<span class="keyword">int</span>&gt; <span class="built_in">list</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = L; i &lt;= R; i++) &#123;</span><br><span class="line">        <span class="built_in">list</span>.push_back(<span class="built_in">array</span>[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 分配</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; i : <span class="built_in">list</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> Di = GetDigit(i, D);</span><br><span class="line">        arr[Di].push_back(i);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 收集</span></span><br><span class="line">    <span class="keyword">int</span> left = L;</span><br><span class="line">    <span class="keyword">int</span> right = L;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; l : arr) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; i : l) &#123;</span><br><span class="line">            <span class="built_in">array</span>[right++] = i;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 递归对该桶数据排序，位数减1</span></span><br><span class="line">        MSD(<span class="built_in">array</span>, left, right - <span class="number">1</span>, D - <span class="number">1</span>);</span><br><span class="line">        left = right;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 基数排序 - 主位优先</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">MSDRadixSort</span><span class="params">(<span class="keyword">int</span> <span class="built_in">array</span>[], <span class="keyword">int</span> size)</span> </span>&#123;</span><br><span class="line">    MSD(<span class="built_in">array</span>, <span class="number">0</span>, size - <span class="number">1</span>, MaxDigit);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;基于桶排序来实现。通过键值的部分信息，将要排序的元素分配至某些“桶”中，以此达到排序的作用。基数排序的方式可以采用LSD或MSD，LSD的排序方式由键值的最右边开始，而MSD则相反，由键值的最左边开始&lt;br&gt;时间复杂度：O(p(n+b))&lt;br&gt;其中：分配为O(n)、收集为
       
     
     </summary>

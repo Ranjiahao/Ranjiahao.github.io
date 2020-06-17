@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ranjiahao.github.io/"/>
-  <updated>2020-06-15T16:00:00.000Z</updated>
+  <updated>2020-06-16T16:00:00.000Z</updated>
   <id>https://ranjiahao.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>线程的创建、终止、等待、分离</title>
+    <link href="https://ranjiahao.github.io/2020/06/17/%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E3%80%81%E7%BB%88%E6%AD%A2%E3%80%81%E7%AD%89%E5%BE%85%E3%80%81%E5%88%86%E7%A6%BB/"/>
+    <id>https://ranjiahao.github.io/2020/06/17/%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E3%80%81%E7%BB%88%E6%AD%A2%E3%80%81%E7%AD%89%E5%BE%85%E3%80%81%E5%88%86%E7%A6%BB/</id>
+    <published>2020-06-16T16:00:00.000Z</published>
+    <updated>2020-06-16T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在Linux中，目前线程的实现是用Native POSIX Thread Libary，这种实现下每个用户级线程对应一个内核中的调度实体即内核级线程，拥有自己的进程描述符（task_struct结构体）在CPU的角度，一个PCB（进程描述符）就代表一个进程，Linux下的线程都是轻量级进程，内核并不知道用户级线程的存在，该用户级线程的实现是通过用户级线程库POSIX来完成的，链接这些线程函数库时要加上&quot;-lpthread&quot;选项，指定要链接的库名</p><h1 id="创建线程"><a class="markdownIt-Anchor" href="#创建线程"></a> 创建线程</h1><blockquote><p><code>int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg);</code><br>thread: 输出型参数返回线程ID（用户态线程ID）<br>attr: 设置线程的属性，attr为NULL表示使用默认属性<br>start_routine: 是个函数地址，线程启动后要执行的函数<br>arg: 传给线程启动函数的参数<br>成功返回0；失败返回错误码<br>传统的一些函数是，成功返回0，失败返回-1，并且对全局变量errno赋值以指示错误。pthreads函数出错时不会设置全局变量errno（大部分其他POSIX函数会这样做）而是将错误码通过返回值返回pthreads同样也提供了线程内的errno变量，以支持其它使用errno的代码。对于pthreads函数的错误，读取返回值要比读取线程内的errno变量的开销小</p></blockquote><p>pthread_t实际是一个unsigned long类型，其本质就是一个进程地址空间上的一个地址，NPTL提供<code>pthread_t pthread_self(void);</code>函数来查看<br>创建一个线程就是创建一个pcb，但是线程中还有一些独有的数据，加载动态库就是在进程地址空间中的共享区，而我们用的NPTL函数本身就是动态库函数，所以线程独有的信息都在共享区，操作系统在共享区开辟了一块空间来存放每个线程独有的数据（栈、线程局部存储信息、线程在用户态的描述）而pthread_t就指向这个空间的地址，也可以使用命令pstack [进程id(线程组id)]查看<br>我们平常使用ps -L 查看到的pid就是线程组id，而LWP就是调度实体的线程id（内核级线程id）也叫轻量级进程id，Linux提供了gettid系统调用来返回其线程id（内核级线程id），可是glibc并没有将该系统调用封装起来，在开放接口来共程序员使用。如果确实需要获得线程ID，可以采用如下方法：<code>#include &lt;sys/syscall.h&gt; pid_t tid; tid = syscall(SYS_gettid);</code></p><h1 id="线程终止"><a class="markdownIt-Anchor" href="#线程终止"></a> 线程终止</h1><ol><li><p>从线程 return，如果是从主线程return，相当于exit，所有线程都结束</p></li><li><p>线程自己调用pthread_exit来终止自己</p></li></ol><blockquote><p><code>void pthread_exit(void *value_ptr);</code><br>value_ptr: 输出型参数，该线程退出时的退出码，注意不要指向一个局部变量，因为当线程的调用函数退出时，局部变量也就销毁了</p></blockquote><ol start="3"><li>一个线程可以调用pthread_cancel终止同一进程中的另一进程</li></ol><blockquote><p><code>int pthread_cancel(pthread_t thread);</code><br>参数传pthread_self()时终止自己，成功返回0，失败返回错误码</p></blockquote><h1 id="进程等待"><a class="markdownIt-Anchor" href="#进程等待"></a> 进程等待</h1><p>当一个线程退出时，如果空间没有被释放，新创建的线程也不会利用退出线程的资源，会发生内存泄漏，因此新线程在退出时主线程要通过等待的方式回收退出线程的资源并获取新线程退出时的状态</p><blockquote><p><code>int pthread_join(pthread_t thread, void **value_ptr);</code><br>value_ptr: 由于线程终止时返回一个指针，这个指针一般指向全局变量或者malloc分配的空间，所以进程等待接收参数的时候需要传入一个一级指针的地址来接收参数，成功返回0；失败返回错误码</p></blockquote><p>注意：该函数是以阻塞的方式进行等待的，thread线程以不同的方式终止，得到的线程终止状态也是不同的：</p><ul><li>线程以return的方式终止，value_ptr指向的空间中保存return返回的值</li><li>线程以pthread_exit的方式终止，value_ptr指向的空间中保存传给pthread_exit的参数</li><li>线程被别的线程调用pthread_cancel的方式终止，value_ptr指向的空间中保存常数PTHREAD_CANCELED，<code>#define PTHREAD_CANCELED (void\*)-1;</code></li><li>如果不关心新线程的退出状态，直接将value_ptr设置为NULL即可</li></ul><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">ThreadEntry1</span><span class="params">(<span class="keyword">void</span>* arg)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Thread1\n"</span>);</span><br><span class="line">    <span class="keyword">int</span>* p = (<span class="keyword">int</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">int</span>));</span><br><span class="line">    *p = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> (<span class="keyword">void</span>*)p;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">ThreadEntry2</span><span class="params">(<span class="keyword">void</span>* arg)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Thread2\n"</span>);</span><br><span class="line">    <span class="keyword">int</span>* p = (<span class="keyword">int</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">int</span>));</span><br><span class="line">    *p = <span class="number">2</span>;</span><br><span class="line">    pthread_exit((<span class="keyword">void</span>*)p);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">ThreadEntry3</span><span class="params">(<span class="keyword">void</span>* arg)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Thread3\n"</span>);</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"thread3 is running~\n"</span>);</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> t1, t2, t3;</span><br><span class="line">    pthread_create(&amp;t1, <span class="literal">NULL</span>, ThreadEntry1, <span class="literal">NULL</span>);</span><br><span class="line">    pthread_create(&amp;t2, <span class="literal">NULL</span>, ThreadEntry2, <span class="literal">NULL</span>);</span><br><span class="line">    pthread_create(&amp;t3, <span class="literal">NULL</span>, ThreadEntry3, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">void</span>* ret;</span><br><span class="line">    pthread_join(t1, &amp;ret);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Thread1 return, return code %d\n"</span>, *(<span class="keyword">int</span>*)ret);</span><br><span class="line">    <span class="built_in">free</span>(ret);</span><br><span class="line">    pthread_join(t2, &amp;ret);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"Thread2 return, return code %d\n"</span>, *(<span class="keyword">int</span>*)ret);</span><br><span class="line">    <span class="built_in">free</span>(ret);</span><br><span class="line">    pthread_cancel(t3);</span><br><span class="line">    pthread_join(t3, &amp;ret);</span><br><span class="line">    <span class="keyword">if</span> (ret == PTHREAD_CANCELED) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Thread3 return, return code PTHREAD_CANCELED\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><img src="img1.png" alt="img1"></p><p>我们说父子进程的执行顺序不一定，但是我们却很难看到子进程先于父进程执行，这里却很容易可以看到线程执行顺序不一定，这是因为每次创建一个进程的代价比较大，所以父进程就有很大的概率去执行，而线程的创建代价比较小，所以很容易看到执行顺序不一定这个结果，但是线程等待是串行的</p><h1 id="线程分离"><a class="markdownIt-Anchor" href="#线程分离"></a> 线程分离</h1><p>在默认情况下创建的线程是joinable的，线程退出后，要对其进行pthread_join操作，否则无法回收资源，造成内存泄漏，如果不关心线程的返回值，那么join就是一个负担，这个时候我们可以告诉操作系统线程退出时，由操作系统自动回收资源</p><blockquote><p><code>int pthread_detach(pthread_t thread);</code><br>也可以是线程自己分离：pthread_detach(pthread_self());一个分离的线程异常退出，整个进程也会异常退出，joinable和detached是两个对立的状态，两者不可能同时存在</p></blockquote>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在Linux中，目前线程的实现是用Native POSIX Thread Libary，这种实现下每个用户级线程对应一个内核中的调度实体即内核级线程，拥有自己的进程描述符（task_struct结构体）在CPU的角度，一个PCB（进程描述符）就代表一个进程，Linux下的线
+      
+    
+    </summary>
+    
+    
+      <category term="Linux" scheme="https://Ranjiahao.github.io/categories/Linux/"/>
+    
+    
+      <category term="线程" scheme="https://Ranjiahao.github.io/tags/%E7%BA%BF%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>线程基础</title>
@@ -513,32 +539,6 @@
     
     
       <category term="进程" scheme="https://Ranjiahao.github.io/tags/%E8%BF%9B%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>排序总结</title>
-    <link href="https://ranjiahao.github.io/2020/04/08/%E6%8E%92%E5%BA%8F%E6%80%BB%E7%BB%93/"/>
-    <id>https://ranjiahao.github.io/2020/04/08/%E6%8E%92%E5%BA%8F%E6%80%BB%E7%BB%93/</id>
-    <published>2020-04-07T16:00:00.000Z</published>
-    <updated>2020-04-07T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<table><thead><tr><th style="text-align:center">名称</th><th style="text-align:center">平均时间复杂度</th><th style="text-align:center">额外空间复杂度</th><th style="text-align:center">in-place</th><th style="text-align:center">稳定性</th></tr></thead><tbody><tr><td style="text-align:center">冒泡排序</td><td style="text-align:center">O(n<sup>2</sup>)</td><td style="text-align:center">O(1)</td><td style="text-align:center">true</td><td style="text-align:center">稳定</td></tr><tr><td style="text-align:center">选择排序</td><td style="text-align:center">O(n<sup>2</sup>)</td><td style="text-align:center">O(1)</td><td style="text-align:center">true</td><td style="text-align:center">不稳定</td></tr><tr><td style="text-align:center">插入排序</td><td style="text-align:center">O(n<sup>2</sup>)</td><td style="text-align:center">O(1)</td><td style="text-align:center">true</td><td style="text-align:center">稳定</td></tr><tr><td style="text-align:center">归并排序</td><td style="text-align:center">O(n * log n)</td><td style="text-align:center">O(n)</td><td style="text-align:center">false</td><td style="text-align:center">稳定</td></tr><tr><td style="text-align:center">快速排序</td><td style="text-align:center">O(n * log n)</td><td style="text-align:center">O(log n)</td><td style="text-align:center">true</td><td style="text-align:center">不稳定</td></tr><tr><td style="text-align:center">希尔排序</td><td style="text-align:center">O(n<sup>1.3</sup>)</td><td style="text-align:center">O(1)</td><td style="text-align:center">true</td><td style="text-align:center">不稳定</td></tr><tr><td style="text-align:center">堆排序</td><td style="text-align:center">O(n * log n)</td><td style="text-align:center">O(1)</td><td style="text-align:center">true</td><td style="text-align:center">不稳定</td></tr><tr><td style="text-align:center">计数排序</td><td style="text-align:center">O(max(n,范围))</td><td style="text-align:center">O(范围)</td><td style="text-align:center">false</td><td style="text-align:center">稳定</td></tr><tr><td style="text-align:center">基数排序</td><td style="text-align:center">O(p(n+b))</td><td style="text-align:center">O(n+b)</td><td style="text-align:center">false</td><td style="text-align:center">稳定</td></tr><tr><td style="text-align:center">桶排序</td><td style="text-align:center">O(n + n(log n - log m))</td><td style="text-align:center">O(m+n)</td><td style="text-align:center">false</td><td style="text-align:center">依赖于桶内排序</td></tr></tbody></table><p>冒泡排序：n比较小时考虑采用、实现简单但速度慢、每次只移动相邻两个元素</p><p>选择排序：n比较小时考虑采用、实现简单但速度慢、移动次数较少但不稳定、数据不敏感</p><p>插入排序：n比较小时考虑采用、实现简单但速度慢、由于元素移动代价小于元素交换代价所以速度略优于冒泡排序、n越小越有序效率越高</p><p>归并排序：n比较大时考虑采用、数据不敏感、需要O(n)额外空间</p><p>快速排序：n比较大时考虑采用、速度快元素移动少但不稳定、序列越乱，效率越高</p><p>希尔排序：在中小型数组中效率特别快、比较是其中最主要的操作、不稳定</p><p>堆排序：适合处理海量数据、不稳定、数据不敏感</p><p>计数排序：当数据范围比较小时速度非常快</p><p>基数排序：适合多关键字排序</p><p>桶排序：当范围已经知道，而且空间不是很重要的情况下考虑采用桶排序</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;text-align:center&quot;&gt;名称&lt;/th&gt;&lt;th style=&quot;text-align:center&quot;&gt;平均时间复杂度&lt;/th&gt;&lt;th style=&quot;text-align:center&quot;&gt;额外空间复杂度&lt;/th&gt;&lt;
-      
-    
-    </summary>
-    
-    
-      <category term="C/C++" scheme="https://Ranjiahao.github.io/categories/C-C/"/>
-    
-    
-      <category term="排序" scheme="https://Ranjiahao.github.io/tags/%E6%8E%92%E5%BA%8F/"/>
     
   </entry>
   

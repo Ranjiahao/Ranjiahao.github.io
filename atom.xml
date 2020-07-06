@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://ranjiahao.github.io/"/>
-  <updated>2020-07-02T16:00:00.000Z</updated>
+  <updated>2020-07-05T16:00:00.000Z</updated>
   <id>https://ranjiahao.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>UDP协议</title>
+    <link href="https://ranjiahao.github.io/2020/07/06/UDP%E5%8D%8F%E8%AE%AE/"/>
+    <id>https://ranjiahao.github.io/2020/07/06/UDP%E5%8D%8F%E8%AE%AE/</id>
+    <published>2020-07-05T16:00:00.000Z</published>
+    <updated>2020-07-05T16:00:00.000Z</updated>
+    
+    <content type="html"><![CDATA[<ul><li>无连接：UDP不提供复杂的控制机制，利用IP提供面向无连接的通信服务，知道了对端的IP和端口就可以随时发送数据</li><li>不可靠：应用程序发来的数据在收到的那一刻，立刻按照原样发送到网络上，即使出现网络拥堵，UDP也无法进行流量控制等避免网络堵塞行为，此外，传输途中即使出现丢包，UDP也不负责重发，也不保证包序，需要应用层来保证这些，报头短，不需要可靠传输，所以传输速度快</li><li>面向数据报：应用层交给UDP多长的报文，UDP原样发送，既不会拆分，也不会合并（如果发送端调用一次sendto，发送100个字节，那么接收端也必须调用对应的一次recvfrom，接收100个字节；而不能循环调用10次recvfrom，每次接收10个字节）不能够灵活的控制读写数据的次数和数量</li><li>UDP没有真正意义上的发送缓冲区，sendto会直接将整个报文交给内核，由内核将数据传给网络层协议后进行后续的传输动作。UDP具有接收缓冲区，但是这个接收缓冲区不能保证收到UDP报的顺序和发送UDP报的顺序一致；如果缓冲区满了，再到达的UDP数据就会被丢弃</li><li>全双工通信：UDP的socket既能读，也能写，udp在协议栈层面实现了广播功能：通过给一个ip地址发送数据，实现将数据发送到局域网所有主机</li><li>通常被用在包总量较少的通信（DNS、SNMP等）、即时通信、限定于LAN等特定网络中的应用通信、广播通信（广播，多播）RIP、DHCP等</li></ul><p>协议格式：<br><img src="img1.png" alt="img1"><br>16位包长度：限制了UPD报文总长度，包含包头在内不能超过64K，如果需要传输的数据超过64K，就要在应用层手动分包，多次发送，并在接收端手动拼装<br>16位校验和：数据传输过程中会产生误码，0可能变为1，1可能变为0，所以需要校验，以16比特为单位对报文进行取反求和，若进位则将进位加到校验和字段中。接收端接收到校验和后，执行相同的操作，得到检验和结果为全1，则数据未出错<br>由于UDP首部只有五元组中的源端口和目标端口，余下三项都在IP首部里，若其他三项信息被破坏则就可能导致该收包的应用收不到包，不该收到包的应用却收到了包，为了解决这个问题，就引入了伪首部的概念，此外IPv6的IP首部无校验和字段，TCP或UDP通过伪首部，得以对5元组进行校验，实现即使在IP首部并不可靠的情况下仍然能提供可靠的通信传输<br>伪首部：<br><img src="C:%5CUsers%5Clenovo%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200820152924511.png" alt="image-20200820152924511"><br>伪首部的明智之处在于，用它来计算校验和，我们能提供这些保护，而不必真的发送为报头本身的那些域。从而消除了用在伪真报头中的TCP的IP域的重复使用；避免了冗余和带宽的浪费。其缺点在于这种计算校验和的方法需要更多的时间和精力</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;ul&gt;&lt;li&gt;无连接：UDP不提供复杂的控制机制，利用IP提供面向无连接的通信服务，知道了对端的IP和端口就可以随时发送数据&lt;/li&gt;&lt;li&gt;不可靠：应用程序发来的数据在收到的那一刻，立刻按照原样发送到网络上，即使出现网络拥堵，UDP也无法进行流量控制等避免网络堵塞行为，此外，
+      
+    
+    </summary>
+    
+    
+      <category term="Linux" scheme="https://Ranjiahao.github.io/categories/Linux/"/>
+    
+    
+      <category term="UDP" scheme="https://Ranjiahao.github.io/tags/UDP/"/>
+    
+  </entry>
   
   <entry>
     <title>SocketAPI</title>
@@ -504,32 +530,6 @@
       
       
         &lt;p&gt;当进程调用exec函数执行磁盘里另一个程序时，并不创建新进程，调用前后进程id并未改变，新进程的数据和代码会替换掉物理内存中的数据段和代码段，从而虚拟根据页表找到的数据和代码都会别替换成新的，所以当进程开始执行时，就要从要执行的程序开始执行&lt;br&gt;系统调用：&lt;br&gt;&lt;cod
-      
-    
-    </summary>
-    
-    
-      <category term="Linux" scheme="https://Ranjiahao.github.io/categories/Linux/"/>
-    
-    
-      <category term="进程" scheme="https://Ranjiahao.github.io/tags/%E8%BF%9B%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>进程终止与wait参数status</title>
-    <link href="https://ranjiahao.github.io/2020/05/02/%E8%BF%9B%E7%A8%8B%E7%BB%88%E6%AD%A2%E4%B8%8Ewait%E5%8F%82%E6%95%B0status/"/>
-    <id>https://ranjiahao.github.io/2020/05/02/%E8%BF%9B%E7%A8%8B%E7%BB%88%E6%AD%A2%E4%B8%8Ewait%E5%8F%82%E6%95%B0status/</id>
-    <published>2020-05-01T16:00:00.000Z</published>
-    <updated>2020-05-01T16:00:00.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="常见进程退出方法"><a class="markdownIt-Anchor" href="#常见进程退出方法"></a> 常见进程退出方法</h1><ol><li>exit或_exit退出<br>_exit系统调用函数：<code>void _exit(int status);</code><br>参数status定义了进程的终止状态，父进程通过wait获取该值。<br>虽然status是int，但是仅有低8位可以被父进程所用，实际上就是子进程的返回值。<br>exit库函数：<code>void exit(int status);</code><br>和_exit唯一的区别是退出前执行用户通过atexit或on_exit定义的清理函数然后刷新缓存关闭所有打开的流，最后调用_exit函数退出</li><li>return退出，和exit一样，exec/exit针对进程间通信，就像call/return针对函数间通信</li><li>信号终止</li></ol><h1 id="常见进程等待方法"><a class="markdownIt-Anchor" href="#常见进程等待方法"></a> 常见进程等待方法</h1><ol><li>wait系统调用函数（阻塞）<code>pid_t wait(int* status);</code><br>status为输出型参数，NULL表示不关心子进程状态<br>返回值：成功返回被等待进程的pid，失败返回-1</li><li>waitpid系统调用函数<br><code>pid_ t waitpid(pid_t pid, int* status, int options);</code><br>参数pid若为-1则等待任意一个进程，若&gt;0则等待特定的进程<br>参数options若为0则阻塞，若为WNOHANG则非阻塞</li></ol><h1 id="wait参数statu"><a class="markdownIt-Anchor" href="#wait参数statu"></a> wait参数statu</h1><p>status不仅仅是一个int类型参数，可以看作是一个位图<br>只研究其低16位：<br><img src="img1.png" alt="img1"><br>我们可以通过status &amp; 0x7f来判断异常信号是否为0；<br>若为0，则正常退出，然后可以通过(status &gt;&gt; 8) &amp; 0xff来获取子进程返回值。<br>sys/wait.h中提供了一些宏来简化这些操作：</p><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (WIFEXITED(status)) &#123;</span><br><span class="line">    <span class="comment">// 正常退出：((status) &amp; 0x7f) == 0</span></span><br><span class="line">    <span class="comment">// 打印退出码：(status &gt;&gt; 8) &amp; 0xff</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child return: %d\n"</span>, WEXITSTATUS(status));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (WIFSIGNALED(status)) &#123;</span><br><span class="line">    <span class="comment">// 异常退出：((signed char) (((status) &amp; 0x7f) + 1) &gt;&gt; 1) &gt; 0</span></span><br><span class="line">    <span class="comment">// 打印异常信号值：(status) &amp; 0x7f</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child signal: %d\n"</span>, WTERMSIG(status));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;常见进程退出方法&quot;&gt;&lt;a class=&quot;markdownIt-Anchor&quot; href=&quot;#常见进程退出方法&quot;&gt;&lt;/a&gt; 常见进程退出方法&lt;/h1&gt;&lt;ol&gt;&lt;li&gt;exit或_exit退出&lt;br&gt;_exit系统调用函数：&lt;code&gt;void _exit(int s
       
     
     </summary>
